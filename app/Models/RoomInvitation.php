@@ -13,6 +13,7 @@ class RoomInvitation extends Model
     protected $fillable = [
         'room_id',
         'inviter_id',
+        'invited_user_id',
         'invited_email',
         'token',
         'status',
@@ -33,5 +34,10 @@ class RoomInvitation extends Model
     public function inviter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inviter_id');
+    }
+
+    public function invitedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_user_id');
     }
 }

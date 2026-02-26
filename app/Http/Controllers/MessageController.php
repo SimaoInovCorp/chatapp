@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\MessageResource;
+use App\Models\Message;
 use App\Models\Room;
 use App\Models\User;
 use App\Services\MessageService;
@@ -31,7 +32,22 @@ class MessageController extends Controller
 
         $this->authorizeTarget($request->user(), $targetClass, $target);
 
-        $query = $target->messages()->with('user')->orderBy('created_at');
+        if ($targetClass === User::class) {
+            $authUser = $request->user();
+            $query = Message::query()
+                ->with('user')
+                ->where('target_type', User::class)
+                ->where(function ($q) use ($authUser, $target) {
+                    $q->where(function ($q) use ($authUser, $target) {
+                        $q->where('target_id', $target->id)->where('user_id', $authUser->id);
+                    })->orWhere(function ($q) use ($authUser, $target) {
+                        $q->where('target_id', $authUser->id)->where('user_id', $target->id);
+                    });
+                })
+                ->orderBy('created_at');
+        } else {
+            $query = $target->messages()->with('user')->orderBy('created_at');
+        }
 
         if ($since = $request->input('since')) {
             $query->where('created_at', '>', Carbon::parse($since));

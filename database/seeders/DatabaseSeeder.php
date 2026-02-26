@@ -5,9 +5,11 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Message;
+use App\Models\RoomInvitation;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -87,6 +89,26 @@ class DatabaseSeeder extends Seeder
         $admin->messages()->create([
             'user_id' => $guest->id,
             'body' => 'Reply from Guest back to Admin — DM flow works.',
+        ]);
+
+        $pendingUser = User::updateOrCreate(
+            ['email' => 'pending@inovcorp.test'],
+            [
+                'name' => 'Pending User',
+                'password' => Hash::make('password'),
+                'role' => UserRole::User,
+                'status' => UserStatus::Offline,
+                'email_verified_at' => now(),
+            ],
+        );
+
+        RoomInvitation::create([
+            'room_id' => $testRoom->id,
+            'inviter_id' => $admin->id,
+            'invited_user_id' => $pendingUser->id,
+            'invited_email' => $pendingUser->email,
+            'token' => (string) \Illuminate\Support\Str::uuid(),
+            'status' => 'pending',
         ]);
     }
 }
