@@ -1,7 +1,8 @@
-import './bootstrap';
+import "./bootstrap";
+import Alpine from "alpinejs";
+import chatPage from "./chat";
 
-import Alpine from 'alpinejs';
-
+window.chatPage = chatPage;
 window.Alpine = Alpine;
 
 Alpine.start();
