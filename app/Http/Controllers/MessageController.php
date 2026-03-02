@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\JsonResponse;
+use App\Enums\UserRole;
 
 class MessageController extends Controller
 {
@@ -69,6 +71,25 @@ class MessageController extends Controller
         $message->load('user');
 
         return new MessageResource($message);
+    }
+
+    public function destroy(Request $request, Message $message): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            abort(403);
+        }
+
+        $canDelete = $message->user_id === $user->id || $user->role === UserRole::Admin;
+
+        if (!$canDelete) {
+            abort(403, 'You can only delete your own messages.');
+        }
+
+        $message->delete();
+
+        return response()->json(['status' => 'deleted']);
     }
 
     private function resolveTarget(string $targetType, int $targetId): array

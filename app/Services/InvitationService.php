@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Room;
 use App\Models\RoomInvitation;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class InvitationService
@@ -45,14 +46,26 @@ class InvitationService
             return $invitation;
         }
 
-        $invitation->update([
-            'status' => 'accepted',
-            'accepted_at' => now(),
-        ]);
+        DB::transaction(function () use ($invitation, $user) {
+            // Archive any previous accepted invitations for this room/user to avoid unique constraint issues
+            RoomInvitation::query()
+                ->where('room_id', $invitation->room_id)
+                ->where('invited_user_id', $invitation->invited_user_id)
+                ->where('status', 'accepted')
+                ->where('id', '!=', $invitation->id)
+                ->update([
+                    'status' => 'archived',
+                ]);
 
-        $invitation->room->users()->syncWithoutDetaching([$user->id]);
+            $invitation->update([
+                'status' => 'accepted',
+                'accepted_at' => now(),
+            ]);
 
-        return $invitation;
+            $invitation->room->users()->syncWithoutDetaching([$user->id]);
+        });
+
+        return $invitation->refresh();
     }
 
     public function decline(RoomInvitation $invitation, User $user): RoomInvitation

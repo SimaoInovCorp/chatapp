@@ -45,4 +45,9 @@ class RoomPolicy
     {
         return $user->role === UserRole::Admin || $room->created_by === $user->id;
     }
+
+    public function kick(User $user, Room $room): bool
+    {
+        return $user->role === UserRole::Admin || $room->created_by === $user->id;
+    }
 }

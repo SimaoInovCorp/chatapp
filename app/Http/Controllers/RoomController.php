@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -67,5 +68,22 @@ class RoomController extends Controller
         $room->delete();
 
         return redirect()->route('chat')->with('status', 'Room deleted');
+    }
+
+    public function kick(Room $room, User $user): RedirectResponse
+    {
+        Gate::authorize('kick', $room);
+
+        if ($room->created_by === $user->id) {
+            abort(403, 'Cannot remove the room owner.');
+        }
+
+        if (!$room->users()->whereKey($user->id)->exists()) {
+            abort(404, 'User is not in this room.');
+        }
+
+        $room->users()->detach($user->id);
+
+        return back()->with('status', 'User removed from room');
     }
 }

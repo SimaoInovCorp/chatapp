@@ -2,6 +2,7 @@ export default function chatPage({ rooms, directUsers, authUser }) {
     return {
         rooms,
         directUsers,
+        authUser,
         messages: [],
         draft: "",
         activeTarget: null,
@@ -94,6 +95,21 @@ export default function chatPage({ rooms, directUsers, authUser }) {
         formatTime(timestamp) {
             if (!timestamp) return "";
             return new Date(timestamp).toLocaleString();
+        },
+        async deleteMessage(messageId) {
+            const messageIndex = this.messages.findIndex(
+                (msg) => msg.id === messageId,
+            );
+            if (messageIndex === -1) return;
+
+            try {
+                await axios.delete(`/chat/messages/${messageId}`);
+                this.messages.splice(messageIndex, 1);
+                this.statusText = "Message deleted";
+            } catch (error) {
+                console.error(error);
+                this.statusText = "Failed to delete message";
+            }
         },
     };
 }

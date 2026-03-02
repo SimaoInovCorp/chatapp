@@ -29,7 +29,7 @@ class ChatController extends Controller
         $rooms = collect($roomsPaginator->items());
         $directUsers = collect($directUsersPaginator->items());
 
-        $roomsAll = $user->rooms()->with('users:id')->withCount('users')->get();
+        $roomsAll = $user->rooms()->with('users:id,name,email')->withCount('users')->get();
         $directUsersAll = User::query()
             ->whereKeyNot($user->getAuthIdentifier())
             ->select(['id', 'name', 'email', 'avatar', 'status'])

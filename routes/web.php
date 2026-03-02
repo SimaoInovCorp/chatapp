@@ -5,11 +5,17 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\RoomInvitationController;
+use App\Http\Controllers\Admin\RoomManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('dashboard');
 });
+
+Route::get('/about', function () {
+    return view('about');
+})->name('about');
 
 Route::get('/dashboard', function () {
     return redirect()->route('chat');
@@ -17,6 +23,8 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat', ChatController::class)->name('chat');
+
+    Route::post('/rooms/{room}/kick/{user}', [RoomController::class, 'kick'])->name('rooms.kick');
 
     Route::get('/invitations', [RoomInvitationController::class, 'index'])->name('invitations.index');
 
@@ -31,10 +39,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/chat/messages', [MessageController::class, 'index'])->name('messages.index');
     Route::post('/chat/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::delete('/chat/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
     Route::post('/rooms/invitations', [RoomInvitationController::class, 'store'])->name('rooms.invitations.store');
     Route::post('/invitations/{invitation}/accept', [RoomInvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/invitations/{invitation}/decline', [RoomInvitationController::class, 'decline'])->name('invitations.decline');
+
+    Route::get('/admin/rooms', [RoomManagementController::class, 'index'])->name('admin.rooms.index');
+    Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 Route::get('/invitations/{token}', [RoomInvitationController::class, 'show'])->name('invitations.show');
